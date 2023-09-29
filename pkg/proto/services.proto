@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/quocbang/grpc-gateway/pkg/pb";
+
+
+import "user.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+service Account {
+  rpc Login (LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/api/user/login"
+      body: "*"
+    };
+  };
+  rpc ReNewToken (ReNewTokenRequest) returns (ReNewTokenResponse) {
+    option (google.api.http) = {
+      post: "/api/user/renew-token"
+      body: "*"
+    };
+  };
+}
+
+service Messaging {
+  rpc GetVerifyCode (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      get: "/api/message/verify-code"
+    };
+  };
+}

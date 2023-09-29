@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/quocbang/grpc-gateway/pkg/pb";
+
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message ReNewTokenRequest {
+  string refresh_token = 1;
+}
+
+message ReNewTokenResponse {
+  string access_token = 1;
+}
