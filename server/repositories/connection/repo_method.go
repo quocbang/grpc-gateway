@@ -7,9 +7,9 @@ import (
 )
 
 func (db DB) Account() repositories.Account {
-	return account.NewAccount(db.db)
+	return account.NewAccount(db.Postgres)
 }
 
 func (db DB) Message() repositories.Messaging {
-	return message.NewMessage(db.db)
+	return message.NewMessage(db.Postgres)
 }

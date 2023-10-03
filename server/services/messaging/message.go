@@ -10,10 +10,10 @@ import (
 
 type server struct {
 	repo repositories.Repositories
-	pb.UnimplementedMessagingServer
+	pb.UnimplementedMessagingServiceServer
 }
 
-func NewMessage(repo repositories.Repositories) pb.MessagingServer {
+func NewMessage(repo repositories.Repositories) pb.MessagingServiceServer {
 	return server{
 		repo: repo,
 	}

@@ -6,11 +6,11 @@ import (
 )
 
 type service struct {
-	db gorm.DB
+	pg *gorm.DB
 }
 
-func NewMessage(db gorm.DB) repositories.Messaging {
+func NewMessage(pg *gorm.DB) repositories.Messaging {
 	return service{
-		db: db,
+		pg: pg,
 	}
 }

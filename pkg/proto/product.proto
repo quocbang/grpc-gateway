@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/quocbang/grpc-gateway/pkg/pb";
+
+import "pagination.proto";
+import "types.proto";
+import "common.proto";
+
+message SearchProductRequest {
+  PaginationRequest pagination = 1;
+}
+
+message SearchProductResponse {
+  repeated Product product = 1;
+}
+
+message Rom {
+  SizeUnit unit = 1;
+  int64 size = 2;
+}
+
+message Ram {
+  SizeUnit unit = 1;
+  int64 size = 2;
+}
+
+message AdvanceInfo {
+  Rom rom = 1;
+  Ram ram = 2;
+  float cpu = 3;
+}
+
+message Product {
+  string ID = 1;
+  string color = 2;
+  string producer = 3;
+  string series = 4;
+  AdvanceInfo advance_info = 5;
+}
+
+message CreateProductRequest {
+  repeated Product products = 1;
+}
+
+message CreateProductResponse {
+  CommonCreateResponse affected_rows = 1; 
+}

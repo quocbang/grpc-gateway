@@ -2,19 +2,27 @@ package account
 
 import (
 	"context"
+	"time"
 
 	"github.com/quocbang/grpc-gateway/pkg/pb"
 	"github.com/quocbang/grpc-gateway/server/repositories"
+	"github.com/quocbang/grpc-gateway/server/utils/roles"
 )
 
 type server struct {
-	repo repositories.Repositories
-	pb.UnimplementedAccountServer
+	repo          repositories.Repositories
+	tokenLifeTime time.Duration
+	secretKey     string
+	hasPermission func(string, roles.Roles) bool
+	pb.UnimplementedAccountServiceServer
 }
 
-func NewAccount(repo repositories.Repositories) pb.AccountServer {
+func NewAccount(repo repositories.Repositories, tokenLifeTime time.Duration, secretKey string, hasPermission func(string, roles.Roles) bool) pb.AccountServiceServer {
 	return server{
-		repo: repo,
+		repo:          repo,
+		tokenLifeTime: tokenLifeTime,
+		secretKey:     secretKey,
+		hasPermission: hasPermission,
 	}
 }
 

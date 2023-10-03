@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package roles;
+
+option go_package = "github.com/quocbang/grpc-gateway/utils/roles";
+
+enum Roles {
+  UNSPECIFIED_USER = 0;
+  USER = 1;
+  LEADER = 2;
+  ADMIN = 3;
+}

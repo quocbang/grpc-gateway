@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/quocbang/grpc-gateway/pkg/pb";
+
+message CommonRequest {
+  
+}
+
+message CommonCreateResponse {
+  int32 affected_rows = 1;
+}

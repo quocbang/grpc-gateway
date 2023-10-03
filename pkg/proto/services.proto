@@ -8,8 +8,9 @@ option go_package = "github.com/quocbang/grpc-gateway/pkg/pb";
 import "user.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
+import "product.proto";
 
-service Account {
+service AccountService {
   rpc Login (LoginRequest) returns (LoginResponse) {
     option (google.api.http) = {
       post: "/api/user/login"
@@ -24,10 +25,25 @@ service Account {
   };
 }
 
-service Messaging {
+service MessagingService {
   rpc GetVerifyCode (google.protobuf.Empty) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       get: "/api/message/verify-code"
+    };
+  };
+}
+
+service ProductService {
+  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse) {
+    option (google.api.http) = {
+      post: "/api/product/phone"
+      body: "*"
+    };
+  };
+  rpc SearchProduct(SearchProductRequest) returns (stream SearchProductResponse) {
+    option (google.api.http) = {
+      get: "/api/product/search"
+      // body: "*"
     };
   };
 }

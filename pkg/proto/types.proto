@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/quocbang/grpc-gateway/pkg/pb";
+
+enum SizeUnit {
+  UNKNOWN = 0; 
+  BIT = 1;
+  BYTE = 2;
+  KILOBYTE = 3;
+  MEGABYTE = 4;
+  GIGABYTE = 5;  
+  TERABYTE = 6;
+  PETABYTE = 7;
+}
