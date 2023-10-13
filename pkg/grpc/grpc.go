@@ -74,14 +74,18 @@ func (g GrpcOption) Run() error {
 		return err
 	}
 
-	ss := server.Server{
+	// set up server info
+	ss := server.ServerInfo{
 		Repo:                 repo,
 		Sender:               sender,
 		SecretKey:            g.SecretKey,
 		AccessTokenLifeTime:  g.AccessTokenLifeTime,
 		RefreshTokenLifeTime: g.RefreshTokenLifeTime,
 	}
-	ss.NewServer(s)
+
+	// register server info
+	server := ss.RegisterServer()
+	server.NewServer(s)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", g.GrpcHost, g.GrpcPort))
 	if err != nil {

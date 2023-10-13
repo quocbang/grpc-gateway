@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Server struct {
+type ServerInfo struct {
 	Repo                 repositories.Repositories
 	Sender               sender.Sender
 	AccessTokenLifeTime  time.Duration
@@ -23,9 +23,21 @@ type Server struct {
 	SecretKey            string
 }
 
+type Server struct {
+	Account pb.AccountServiceServer
+	Product pb.ProductServiceServer
+}
+
+func (si ServerInfo) RegisterServer() Server {
+	return Server{
+		Account: account.NewAccount(si.Repo, si.Sender, si.AccessTokenLifeTime, si.RefreshTokenLifeTime, si.SecretKey, roles.HasPermission),
+		Product: product.NewProductService(si.Repo),
+	}
+}
+
 func (sv Server) NewServer(s *grpc.Server) {
-	pb.RegisterAccountServiceServer(s, account.NewAccount(sv.Repo, sv.Sender, sv.AccessTokenLifeTime, sv.RefreshTokenLifeTime, sv.SecretKey, roles.HasPermission))
-	pb.RegisterProductServiceServer(s, product.NewProductService(sv.Repo))
+	pb.RegisterAccountServiceServer(s, sv.Account)
+	pb.RegisterProductServiceServer(s, sv.Product)
 }
 
 func NewRegisterHandler(ctx context.Context, mux *runtime.ServeMux, grpcServerEndpoint string, opt []grpc.DialOption) error {
