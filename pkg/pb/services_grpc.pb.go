@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -23,8 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccountServiceClient interface {
+	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
-	ReNewToken(ctx context.Context, in *ReNewTokenRequest, opts ...grpc.CallOption) (*ReNewTokenResponse, error)
+	RenewAccess(ctx context.Context, in *RenewAccessRequest, opts ...grpc.CallOption) (*RenewAccessResponse, error)
 }
 
 type accountServiceClient struct {
@@ -33,6 +33,15 @@ type accountServiceClient struct {
 
 func NewAccountServiceClient(cc grpc.ClientConnInterface) AccountServiceClient {
 	return &accountServiceClient{cc}
+}
+
+func (c *accountServiceClient) SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error) {
+	out := new(SignUpResponse)
+	err := c.cc.Invoke(ctx, "/pb.AccountService/SignUp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *accountServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
@@ -44,9 +53,9 @@ func (c *accountServiceClient) Login(ctx context.Context, in *LoginRequest, opts
 	return out, nil
 }
 
-func (c *accountServiceClient) ReNewToken(ctx context.Context, in *ReNewTokenRequest, opts ...grpc.CallOption) (*ReNewTokenResponse, error) {
-	out := new(ReNewTokenResponse)
-	err := c.cc.Invoke(ctx, "/pb.AccountService/ReNewToken", in, out, opts...)
+func (c *accountServiceClient) RenewAccess(ctx context.Context, in *RenewAccessRequest, opts ...grpc.CallOption) (*RenewAccessResponse, error) {
+	out := new(RenewAccessResponse)
+	err := c.cc.Invoke(ctx, "/pb.AccountService/RenewAccess", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -54,25 +63,27 @@ func (c *accountServiceClient) ReNewToken(ctx context.Context, in *ReNewTokenReq
 }
 
 // AccountServiceServer is the server API for AccountService service.
-// All implementations must embed UnimplementedAccountServiceServer
+// All implementations should embed UnimplementedAccountServiceServer
 // for forward compatibility
 type AccountServiceServer interface {
+	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
-	ReNewToken(context.Context, *ReNewTokenRequest) (*ReNewTokenResponse, error)
-	mustEmbedUnimplementedAccountServiceServer()
+	RenewAccess(context.Context, *RenewAccessRequest) (*RenewAccessResponse, error)
 }
 
-// UnimplementedAccountServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedAccountServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedAccountServiceServer struct {
 }
 
+func (UnimplementedAccountServiceServer) SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SignUp not implemented")
+}
 func (UnimplementedAccountServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedAccountServiceServer) ReNewToken(context.Context, *ReNewTokenRequest) (*ReNewTokenResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ReNewToken not implemented")
+func (UnimplementedAccountServiceServer) RenewAccess(context.Context, *RenewAccessRequest) (*RenewAccessResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenewAccess not implemented")
 }
-func (UnimplementedAccountServiceServer) mustEmbedUnimplementedAccountServiceServer() {}
 
 // UnsafeAccountServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to AccountServiceServer will
@@ -83,6 +94,24 @@ type UnsafeAccountServiceServer interface {
 
 func RegisterAccountServiceServer(s grpc.ServiceRegistrar, srv AccountServiceServer) {
 	s.RegisterService(&AccountService_ServiceDesc, srv)
+}
+
+func _AccountService_SignUp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SignUpRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AccountServiceServer).SignUp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.AccountService/SignUp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AccountServiceServer).SignUp(ctx, req.(*SignUpRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _AccountService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -103,20 +132,20 @@ func _AccountService_Login_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AccountService_ReNewToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReNewTokenRequest)
+func _AccountService_RenewAccess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenewAccessRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AccountServiceServer).ReNewToken(ctx, in)
+		return srv.(AccountServiceServer).RenewAccess(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.AccountService/ReNewToken",
+		FullMethod: "/pb.AccountService/RenewAccess",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AccountServiceServer).ReNewToken(ctx, req.(*ReNewTokenRequest))
+		return srv.(AccountServiceServer).RenewAccess(ctx, req.(*RenewAccessRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -129,98 +158,16 @@ var AccountService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*AccountServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "SignUp",
+			Handler:    _AccountService_SignUp_Handler,
+		},
+		{
 			MethodName: "Login",
 			Handler:    _AccountService_Login_Handler,
 		},
 		{
-			MethodName: "ReNewToken",
-			Handler:    _AccountService_ReNewToken_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "services.proto",
-}
-
-// MessagingServiceClient is the client API for MessagingService service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type MessagingServiceClient interface {
-	GetVerifyCode(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-}
-
-type messagingServiceClient struct {
-	cc grpc.ClientConnInterface
-}
-
-func NewMessagingServiceClient(cc grpc.ClientConnInterface) MessagingServiceClient {
-	return &messagingServiceClient{cc}
-}
-
-func (c *messagingServiceClient) GetVerifyCode(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/pb.MessagingService/GetVerifyCode", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// MessagingServiceServer is the server API for MessagingService service.
-// All implementations must embed UnimplementedMessagingServiceServer
-// for forward compatibility
-type MessagingServiceServer interface {
-	GetVerifyCode(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	mustEmbedUnimplementedMessagingServiceServer()
-}
-
-// UnimplementedMessagingServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedMessagingServiceServer struct {
-}
-
-func (UnimplementedMessagingServiceServer) GetVerifyCode(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetVerifyCode not implemented")
-}
-func (UnimplementedMessagingServiceServer) mustEmbedUnimplementedMessagingServiceServer() {}
-
-// UnsafeMessagingServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to MessagingServiceServer will
-// result in compilation errors.
-type UnsafeMessagingServiceServer interface {
-	mustEmbedUnimplementedMessagingServiceServer()
-}
-
-func RegisterMessagingServiceServer(s grpc.ServiceRegistrar, srv MessagingServiceServer) {
-	s.RegisterService(&MessagingService_ServiceDesc, srv)
-}
-
-func _MessagingService_GetVerifyCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MessagingServiceServer).GetVerifyCode(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.MessagingService/GetVerifyCode",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MessagingServiceServer).GetVerifyCode(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-// MessagingService_ServiceDesc is the grpc.ServiceDesc for MessagingService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var MessagingService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "pb.MessagingService",
-	HandlerType: (*MessagingServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "GetVerifyCode",
-			Handler:    _MessagingService_GetVerifyCode_Handler,
+			MethodName: "RenewAccess",
+			Handler:    _AccountService_RenewAccess_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -285,15 +232,14 @@ func (x *productServiceSearchProductClient) Recv() (*SearchProductResponse, erro
 }
 
 // ProductServiceServer is the server API for ProductService service.
-// All implementations must embed UnimplementedProductServiceServer
+// All implementations should embed UnimplementedProductServiceServer
 // for forward compatibility
 type ProductServiceServer interface {
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error)
 	SearchProduct(*SearchProductRequest, ProductService_SearchProductServer) error
-	mustEmbedUnimplementedProductServiceServer()
 }
 
-// UnimplementedProductServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedProductServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedProductServiceServer struct {
 }
 
@@ -303,7 +249,6 @@ func (UnimplementedProductServiceServer) CreateProduct(context.Context, *CreateP
 func (UnimplementedProductServiceServer) SearchProduct(*SearchProductRequest, ProductService_SearchProductServer) error {
 	return status.Errorf(codes.Unimplemented, "method SearchProduct not implemented")
 }
-func (UnimplementedProductServiceServer) mustEmbedUnimplementedProductServiceServer() {}
 
 // UnsafeProductServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to ProductServiceServer will

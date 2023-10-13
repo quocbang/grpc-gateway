@@ -5,7 +5,10 @@ option go_package = "github.com/quocbang/data-flow-sync/server/internal/reposito
 
 enum Code {
     NONE = 0;
-
+    
     WRONG_PASSWORD = 10100;  
-    ACCOUNT_DOES_NOT_EXIST = 10200;
+    ACCOUNT_DOES_NOT_EXIST = 10200;    
+    MISSING_REQUEST = 10300;
+    ALREADY_IN_TRANSACTION = 10400;
+    INVALID_EMAIL_ADDRESS = 10500;
 }

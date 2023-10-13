@@ -11,24 +11,22 @@ import "google/api/annotations.proto";
 import "product.proto";
 
 service AccountService {
+  rpc SignUp (SignUpRequest) returns (SignUpResponse){
+    option (google.api.http) = {
+      post: "/api/user/sign-up"
+      body: "*"
+    };
+  };
   rpc Login (LoginRequest) returns (LoginResponse) {
     option (google.api.http) = {
       post: "/api/user/login"
       body: "*"
     };
   };
-  rpc ReNewToken (ReNewTokenRequest) returns (ReNewTokenResponse) {
+  rpc RenewAccess (RenewAccessRequest) returns (RenewAccessResponse) {
     option (google.api.http) = {
-      post: "/api/user/renew-token"
+      post: "/api/user/renew-access"
       body: "*"
-    };
-  };
-}
-
-service MessagingService {
-  rpc GetVerifyCode (google.protobuf.Empty) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      get: "/api/message/verify-code"
     };
   };
 }

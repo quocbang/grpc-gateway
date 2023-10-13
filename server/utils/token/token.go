@@ -21,7 +21,7 @@ type JWTClaimCustom struct {
 
 type UserInfo struct {
 	Username string
-	role     roles.Roles
+	Role     roles.Roles
 }
 
 type JWT struct {
@@ -37,7 +37,7 @@ func (j JWT) GenerateToken() (string, error) {
 
 	claims := &JWTClaimCustom{
 		ID:   j.User.Username,
-		Role: j.User.role,
+		Role: j.User.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{
 				Time: time.Now().Add(j.TokenLifeTime),

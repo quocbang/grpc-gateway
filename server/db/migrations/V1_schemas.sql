@@ -1,0 +1,1 @@
+CREATE SCHEMA IF NOT EXISTS grpc_gateway_database;

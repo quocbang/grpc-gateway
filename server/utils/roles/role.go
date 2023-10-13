@@ -1,8 +1,7 @@
 package roles
 
 const (
-	accountService   string = "/pb.Account/"
-	messagingService string = "/pb.Messaging/"
+	accountService string = "/pb.AccountService/"
 )
 
 var accessRoles = map[string][]Roles{}
@@ -31,11 +30,6 @@ func IsNeedToCheckMethodAccess(fullMethod string) bool {
 func init() {
 	// account services
 	{
-		accessRoles[accountService+"ReNewToken"] = []Roles{Roles_USER, Roles_ADMIN, Roles_LEADER}
-	}
-
-	// messaging service
-	{
-		accessRoles[messagingService+"GetVerifyToken"] = []Roles{Roles_UNSPECIFIED_USER}
+		accessRoles[accountService+"RenewAccess"] = []Roles{Roles_USER, Roles_ADMIN, Roles_LEADER}
 	}
 }

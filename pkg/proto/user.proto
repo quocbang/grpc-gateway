@@ -4,20 +4,40 @@ package pb;
 
 option go_package = "github.com/quocbang/grpc-gateway/pkg/pb";
 
+import "google/protobuf/timestamp.proto";
+
 message LoginRequest {
   string username = 1;
   string password = 2;
 }
 
 message LoginResponse {
-  string access_token = 1;
-  string refresh_token = 2;
+  string session_id = 1;
+  string access_token = 2;
+  google.protobuf.Timestamp access_token_expired_at  = 3;
+  string refresh_token = 4;
+  google.protobuf.Timestamp refresh_token_expired_at  = 5;
 }
 
-message ReNewTokenRequest {
-  string refresh_token = 1;
+message RenewAccessRequest {
+  string session_id = 1;
 }
 
-message ReNewTokenResponse {
+message RenewAccessResponse {
   string access_token = 1;
+  google.protobuf.Timestamp access_token_expired_at  = 2;
+}
+
+message SignUpRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message SignUpResponse {
+  string session_id = 1;
+  string access_token = 2;
+  google.protobuf.Timestamp access_token_expired_at  = 3;
+  string refresh_token = 4;
+  google.protobuf.Timestamp refresh_token_expired_at  = 5;
 }

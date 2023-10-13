@@ -7,6 +7,7 @@ import (
 	repositoriesErr "github.com/quocbang/grpc-gateway/server/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories"
 	"github.com/quocbang/grpc-gateway/server/repositories/orm/models"
+	"github.com/quocbang/grpc-gateway/server/utils/roles"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +22,7 @@ func NewAccount(pg *gorm.DB) repositories.Account {
 }
 
 func (s service) Login(ctx context.Context, req repositories.LoginRequest) (repositories.LoginReply, error) {
-	user := models.User{}
+	user := models.Account{}
 	err := s.pg.Where("username=?", req.Username).Take(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -37,4 +38,38 @@ func (s service) Login(ctx context.Context, req repositories.LoginRequest) (repo
 		HashPassword: user.Password,
 		Roles:        user.Role,
 	}, nil
+}
+
+func (s service) CreateAccount(ctx context.Context, req repositories.CreateAccountRequest) error {
+	account := models.Account{
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.HashPassword,
+		Role:     roles.Roles_UNSPECIFIED_USER,
+	}
+	return s.pg.Create(&account).Error
+}
+
+func (s service) GetAccount(ctx context.Context, req repositories.GetAccountRequest) (repositories.GetAccountReply, error) {
+	account := models.Account{}
+	if err := s.pg.Where("username = ?", req.Username).Take(&account).Error; err != nil {
+		return repositories.GetAccountReply{}, err
+	}
+	return repositories.GetAccountReply{Account: account}, nil
+}
+
+func (s service) CreateVerifyAccount(ctx context.Context, req repositories.CreateVerifyAccountRequest) error {
+	verifyAccount := models.AccountVerify{
+		Username:   req.Username,
+		SecretCode: req.SecretCode,
+	}
+	return s.pg.Create(&verifyAccount).Error
+}
+
+func (s service) GetVerifyAccount(ctx context.Context, req repositories.GetVerifyAccountRequest) (repositories.GetVerifyAccountReply, error) {
+	verifyAccount := models.AccountVerify{}
+	if err := s.pg.Where("username = ?", req.Username).Take(&verifyAccount).Error; err != nil {
+		return repositories.GetVerifyAccountReply{}, err
+	}
+	return repositories.GetVerifyAccountReply{AccountVerify: verifyAccount}, nil
 }

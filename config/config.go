@@ -52,8 +52,9 @@ type SenderGroup struct {
 }
 
 type AuthConfig struct {
-	SecretKeyPath string `yaml:"secret_key_path"`
-	TokenLifeTime string `yaml:"token_life_time"`
+	SecretKeyPath        string `yaml:"secret_key_path"`
+	AccessTokenLifeTime  string `yaml:"access_token_life_time"`
+	RefreshTokenLifeTime string `yaml:"refresh_token_life_time"`
 }
 
 type ServerConfig struct {

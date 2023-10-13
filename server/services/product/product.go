@@ -28,29 +28,35 @@ func (p productService) CreateProduct(context.Context, *pb.CreateProductRequest)
 }
 
 func (p productService) SearchProduct(req *pb.SearchProductRequest, stream pb.ProductService_SearchProductServer) error {
-	err := stream.Send(&pb.SearchProductResponse{
-		Product: []*pb.Product{
-			{
-				ID:       uuid.NewString(),
-				Color:    "blue",
-				Producer: "Apple",
-				Series:   "Iphone 15",
-				AdvanceInfo: &pb.AdvanceInfo{
-					Rom: &pb.Rom{
-						Unit: pb.SizeUnit_GIGABYTE,
-						Size: 256,
+	n := 0
+	for {
+		if n == 100 {
+			return nil
+		}
+		err := stream.Send(&pb.SearchProductResponse{
+			Product: []*pb.Product{
+				{
+					ID:       uuid.NewString(),
+					Color:    "blue",
+					Producer: "Apple",
+					Series:   "Iphone 15",
+					AdvanceInfo: &pb.AdvanceInfo{
+						Rom: &pb.Rom{
+							Unit: pb.SizeUnit_GIGABYTE,
+							Size: 256,
+						},
+						Ram: &pb.Ram{
+							Unit: pb.SizeUnit_GIGABYTE,
+							Size: 8,
+						},
+						Cpu: 2.4,
 					},
-					Ram: &pb.Ram{
-						Unit: pb.SizeUnit_GIGABYTE,
-						Size: 8,
-					},
-					Cpu: 2.4,
 				},
 			},
-		},
-	})
-	if err != nil {
-		return status.Error(codes.Internal, fmt.Sprintf("failed to send product, error %v", err))
+		})
+		if err != nil {
+			return status.Error(codes.Internal, fmt.Sprintf("failed to send product, error %v", err))
+		}
+		n++
 	}
-	return nil
 }

@@ -68,9 +68,14 @@ func RunCmd() {
 		log.Fatal(err)
 	}
 
-	tokenLifeTime, err := times.StringToDuration(configurations.Server.Auth.TokenLifeTime)
+	accessTokenLifeTime, err := times.StringToDuration(configurations.Server.Auth.AccessTokenLifeTime)
 	if err != nil {
-		log.Fatalf("failed to parse token life time, error: %v", err)
+		log.Fatalf("failed to parse access token life time, error: %v", err)
+	}
+
+	refreshTokenLifeTime, err := times.StringToDuration(configurations.Server.Auth.RefreshTokenLifeTime)
+	if err != nil {
+		log.Fatalf("failed to parse refresh token life time, error: %v", err)
 	}
 
 	grpcOpts := grpc.GrpcOption{
@@ -90,8 +95,10 @@ func RunCmd() {
 				Password: configurations.Database.Redis.Password,
 			},
 		},
-		SecretKey:     secretKey,
-		TokenLifeTime: tokenLifeTime,
+		SecretKey:            secretKey,
+		AccessTokenLifeTime:  accessTokenLifeTime,
+		RefreshTokenLifeTime: refreshTokenLifeTime,
+		SenderConfig:         configurations.Server.Sender.SMTP,
 	}
 
 	wg := sync.WaitGroup{}

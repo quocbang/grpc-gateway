@@ -1,13 +1,29 @@
 package models
 
-import "github.com/quocbang/grpc-gateway/server/utils/roles"
+import (
+	"github.com/quocbang/grpc-gateway/server/utils/roles"
+)
 
-type User struct {
-	Username string      `gorm:"type:text;primaryKey"`
-	Password []byte      `gorm:"type:bytea;NOT NULL"`
-	Role     roles.Roles `gorm:"type:smallint;NOT NULL"`
+type Account struct {
+	Username       string        `gorm:"type:text;primaryKey"`
+	Email          string        `gorm:"type:text;uniqueIndex:idx_email;NOT NULL"`
+	IsUserVerified bool          `gorm:"NOT NULL;default:false"`
+	Password       []byte        `gorm:"type:bytea;NOT NULL"`
+	Role           roles.Roles   `gorm:"type:smallint;NOT NULL"`
+	AccountVerify  AccountVerify `gorm:"foreignKey:Username;references:Username"`
 }
 
-func (User) TableName() string {
-	return "user"
+func (Account) TableName() string {
+	return "account"
+}
+
+type AccountVerify struct {
+	Username   string `gorm:"type:text;NOT NULL"`
+	SecretCode string `gorm:"NOT NULL"`
+	CreatedAt  int64  `gorm:"NOT NULL;autoCreateTime"`
+	UpdatedAt  int64  `gorm:"autoUpdateTime:nano"`
+}
+
+func (AccountVerify) TableName() string {
+	return "account_verify"
 }

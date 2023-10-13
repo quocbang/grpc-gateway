@@ -36,7 +36,7 @@ type option struct {
 
 type Options func(*option)
 
-func WithScheme(scheme string) Options {
+func WithSchema(scheme string) Options {
 	return func(o *option) {
 		o.scheme = scheme
 	}

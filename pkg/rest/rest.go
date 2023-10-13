@@ -26,6 +26,7 @@ func (s RestOption) Run() error {
 	defer cancel()
 
 	mux := runtime.NewServeMux()
+
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 	if err := server.NewRegisterHandler(ctx, mux, s.GrpcServerEndpoint, opts); err != nil {
 		return err
