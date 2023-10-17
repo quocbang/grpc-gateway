@@ -11,7 +11,6 @@ import (
 	"github.com/quocbang/data-flow-sync/server/utils/random"
 	"github.com/quocbang/grpc-gateway/server"
 	"github.com/quocbang/grpc-gateway/server/repositories"
-	"github.com/quocbang/grpc-gateway/server/sender"
 	"github.com/quocbang/grpc-gateway/server/tests/setup/dependency"
 )
 
@@ -24,7 +23,6 @@ type ServerConfig struct {
 type BasicSuite struct {
 	*suite.Suite
 	NewMockRepositories func(*mock.Mock) repositories.Repositories
-	NewMockSender       func(*mock.Mock) sender.Sender
 	NewMockServer       func(...dependency.ServerTestOptions) server.Server
 }
 
@@ -35,7 +33,6 @@ func NewSuite() *BasicSuite {
 	logger.Info("start service test", field...)
 	return &BasicSuite{
 		NewMockRepositories: dependency.NewMockRepositories,
-		NewMockSender:       dependency.NewMockSender,
 		NewMockServer:       dependency.NewMockServer,
 		Suite:               &suite.Suite{},
 	}

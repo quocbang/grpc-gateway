@@ -14,7 +14,6 @@ import (
 
 type productService struct {
 	Repo repositories.Repositories
-	pb.UnimplementedProductServiceServer
 }
 
 func NewProductService(repo repositories.Repositories) pb.ProductServiceServer {

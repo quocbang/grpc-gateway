@@ -30,19 +30,19 @@ func (es emailService) SendVerifyEmail(ctx context.Context, to string, subject s
 	es.email.Subject = subject
 
 	// do send email
-	chanErr := make(chan error, 1)
-	go func() {
-		err := es.send()
-		if err != nil {
-			chanErr <- err
-		}
-	}()
-	go func(c context.Context, err chan error) {
-		printErr(ctx, chanErr)
-		close(chanErr)
-	}(ctx, chanErr)
+	// chanErr := make(chan error, 1)
+	// go func() {
+	// 	err := es.send()
+	// 	if err != nil {
+	// 		chanErr <- err
+	// 	}
+	// }()
+	// go func(c context.Context, err chan error) {
+	// 	printErr(ctx, chanErr)
+	// 	close(chanErr)
+	// }(ctx, chanErr)
 
-	return nil
+	return es.send()
 }
 
 // TODO: resolve later because it's another process and not work for log.

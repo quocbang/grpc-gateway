@@ -5,12 +5,10 @@ import (
 
 	"github.com/quocbang/grpc-gateway/server"
 	"github.com/quocbang/grpc-gateway/server/repositories"
-	"github.com/quocbang/grpc-gateway/server/sender"
 )
 
 type serverTestOption struct {
 	repositories         repositories.Repositories
-	sender               sender.Sender
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
 	secretKey            string
@@ -27,7 +25,6 @@ func NewMockServer(opts ...ServerTestOptions) server.Server {
 
 	serverInfo := server.ServerInfo{
 		Repo:                 sto.repositories,
-		Sender:               sto.sender,
 		AccessTokenLifeTime:  sto.accessTokenDuration,
 		RefreshTokenLifeTime: sto.refreshTokenDuration,
 		SecretKey:            sto.secretKey,
@@ -38,12 +35,6 @@ func NewMockServer(opts ...ServerTestOptions) server.Server {
 func WithMockRepositories(r repositories.Repositories) ServerTestOptions {
 	return func(sto *serverTestOption) {
 		sto.repositories = r
-	}
-}
-
-func WithMockSender(s sender.Sender) ServerTestOptions {
-	return func(sto *serverTestOption) {
-		sto.sender = s
 	}
 }
 

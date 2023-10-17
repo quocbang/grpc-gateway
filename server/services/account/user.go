@@ -12,39 +12,41 @@ import (
 
 	"github.com/quocbang/grpc-gateway/pkg/grpc/interceptors"
 	"github.com/quocbang/grpc-gateway/pkg/pb"
-	"github.com/quocbang/grpc-gateway/server/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories"
-	"github.com/quocbang/grpc-gateway/server/sender"
+	"github.com/quocbang/grpc-gateway/server/repositories/errors"
+	"github.com/quocbang/grpc-gateway/server/repositories/utils/postgres"
 	"github.com/quocbang/grpc-gateway/server/utils/hashing"
 	"github.com/quocbang/grpc-gateway/server/utils/html/activate"
 	"github.com/quocbang/grpc-gateway/server/utils/roles"
 	"github.com/quocbang/grpc-gateway/server/utils/token"
 	"github.com/quocbang/grpc-gateway/server/utils/validator"
+	"github.com/quocbang/grpc-gateway/server/worker"
+	"github.com/quocbang/grpc-gateway/server/worker/distributor"
 )
 
 type server struct {
 	repo                 repositories.Repositories
-	sender               sender.Sender
 	accessTokenLifeTime  time.Duration
 	refreshTokenLifeTime time.Duration
 	secretKey            string
 	hasPermission        func(string, roles.Roles) bool
+	worker               worker.Worker
 }
 
 func NewAccount(
 	repo repositories.Repositories,
-	sender sender.Sender,
 	accessTokenLifeTime time.Duration,
 	refreshTokenLifeTime time.Duration,
 	secretKey string,
-	hasPermission func(string, roles.Roles) bool) pb.AccountServiceServer {
+	hasPermission func(string, roles.Roles) bool,
+	worker worker.Worker) pb.AccountServiceServer {
 	return &server{
 		repo:                 repo,
-		sender:               sender,
 		accessTokenLifeTime:  accessTokenLifeTime,
 		refreshTokenLifeTime: refreshTokenLifeTime,
 		secretKey:            secretKey,
 		hasPermission:        hasPermission,
+		worker:               worker,
 	}
 }
 
@@ -150,6 +152,9 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 		Email:        req.Email,
 		HashPassword: hashPassword,
 	}); err != nil {
+		if postgres.ErrorIs(err, postgres.UniqueViolation) {
+			return nil, errors.ErrDataExisted
+		}
 		return nil, err
 	}
 
@@ -196,14 +201,6 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 		Username: req.Username,
 	})
 
-	// all ok
-	err = tx.Commit()
-	if err != nil {
-		return nil, errors.Error{
-			Details: fmt.Sprintf("failed to commit, error: %v", err),
-		}
-	}
-
 	// send verify mail
 	htmlActivateService := activate.NewHTMLActivateService(req.Username, verifyAccountInfo.SecretCode)
 	content, err := htmlActivateService.GenerateHTML()
@@ -211,9 +208,25 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 		return nil, fmt.Errorf("failed to generate activate html, error: %v", err)
 	}
 	subject := "WellCome to the grpc gateway project design by quocbang"
-	err = s.sender.Email().SendVerifyEmail(ctx, req.Email, subject, content)
+	task, err := s.worker.Distributor().DistributeTaskSendVerifyEmail(ctx, &distributor.VerifyEmailPayload{
+		To:      req.GetEmail(),
+		Subject: subject,
+		Content: content,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to send mail, error: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to distribute verify email, error: %v", err)
+	}
+
+	if err := s.worker.Processor().ProcessTaskSendVerifyEmail(ctx, task); err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to process verify email, error: %v", err)
+	}
+
+	// all ok
+	err = tx.Commit()
+	if err != nil {
+		return nil, errors.Error{
+			Details: fmt.Sprintf("failed to commit, error: %v", err),
+		}
 	}
 
 	return &pb.SignUpResponse{

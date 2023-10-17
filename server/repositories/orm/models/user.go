@@ -9,7 +9,7 @@ type Account struct {
 	Email          string        `gorm:"type:text;uniqueIndex:idx_email;NOT NULL"`
 	IsUserVerified bool          `gorm:"NOT NULL;default:false"`
 	Password       []byte        `gorm:"type:bytea;NOT NULL"`
-	Role           roles.Roles   `gorm:"type:smallint;NOT NULL"`
+	Role           roles.Roles   `gorm:"type:smallint;NOT NULL;default:0"`
 	AccountVerify  AccountVerify `gorm:"foreignKey:Username;references:Username"`
 }
 
@@ -25,5 +25,5 @@ type AccountVerify struct {
 }
 
 func (AccountVerify) TableName() string {
-	return "account_verify"
+	return "verify_account"
 }

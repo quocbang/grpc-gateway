@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
-	repositoriesErr "github.com/quocbang/grpc-gateway/server/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories"
+	repositoriesErr "github.com/quocbang/grpc-gateway/server/repositories/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories/orm/models"
-	"github.com/quocbang/grpc-gateway/server/utils/roles"
 	"gorm.io/gorm"
 )
 
@@ -45,7 +44,6 @@ func (s service) CreateAccount(ctx context.Context, req repositories.CreateAccou
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.HashPassword,
-		Role:     roles.Roles_UNSPECIFIED_USER,
 	}
 	return s.pg.Create(&account).Error
 }

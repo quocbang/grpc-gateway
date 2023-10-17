@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/quocbang/grpc-gateway/server/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories"
+	"github.com/quocbang/grpc-gateway/server/repositories/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories/services/account"
 )
 

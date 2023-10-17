@@ -1,9 +1,9 @@
 package hashing
 
 import (
-	"github.com/quocbang/grpc-gateway/server/errors"
-
 	"golang.org/x/crypto/bcrypt"
+
+	"github.com/quocbang/grpc-gateway/server/repositories/errors"
 )
 
 func HashPassword(password string) ([]byte, error) {

@@ -6,21 +6,24 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/hibiken/asynq"
+	"google.golang.org/grpc"
+
 	"github.com/quocbang/grpc-gateway/pkg/pb"
 	"github.com/quocbang/grpc-gateway/server/repositories"
-	"github.com/quocbang/grpc-gateway/server/sender"
 	"github.com/quocbang/grpc-gateway/server/services/account"
 	"github.com/quocbang/grpc-gateway/server/services/product"
 	"github.com/quocbang/grpc-gateway/server/utils/roles"
-	"google.golang.org/grpc"
+	"github.com/quocbang/grpc-gateway/server/worker"
+	"github.com/quocbang/grpc-gateway/server/worker/distributor/email"
 )
 
 type ServerInfo struct {
 	Repo                 repositories.Repositories
-	Sender               sender.Sender
 	AccessTokenLifeTime  time.Duration
 	RefreshTokenLifeTime time.Duration
 	SecretKey            string
+	Worker               worker.Worker
 }
 
 type Server struct {
@@ -30,7 +33,7 @@ type Server struct {
 
 func (si ServerInfo) RegisterServer() Server {
 	return Server{
-		Account: account.NewAccount(si.Repo, si.Sender, si.AccessTokenLifeTime, si.RefreshTokenLifeTime, si.SecretKey, roles.HasPermission),
+		Account: account.NewAccount(si.Repo, si.AccessTokenLifeTime, si.RefreshTokenLifeTime, si.SecretKey, roles.HasPermission, si.Worker),
 		Product: product.NewProductService(si.Repo),
 	}
 }
@@ -50,4 +53,8 @@ func NewRegisterHandler(ctx context.Context, mux *runtime.ServeMux, grpcServerEn
 	}
 
 	return nil
+}
+
+func NewWorkerMuxServer(sm *asynq.ServeMux, taskProcessor worker.TaskProcessor) {
+	sm.HandleFunc(email.TaskSendVerifyEmail, taskProcessor.ProcessTaskSendVerifyEmail)
 }

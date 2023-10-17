@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"github.com/hibiken/asynq"
 	"google.golang.org/grpc"
 
 	"github.com/quocbang/grpc-gateway/config"
@@ -14,6 +15,8 @@ import (
 	"github.com/quocbang/grpc-gateway/server"
 	"github.com/quocbang/grpc-gateway/server/repositories/connection"
 	senderConn "github.com/quocbang/grpc-gateway/server/sender/connection"
+	"github.com/quocbang/grpc-gateway/server/worker"
+	"github.com/quocbang/grpc-gateway/server/worker/workersetup"
 )
 
 type GrpcOption struct {
@@ -74,13 +77,19 @@ func (g GrpcOption) Run() error {
 		return err
 	}
 
+	// init worker pool
+	worker, asynqServer := workersetup.RegisterWorker(workersetup.RedisConfig{
+		RedisConfig: g.Database.Redis,
+	}, sender)
+	go startWorkerServer(asynqServer, worker.Processor())
+
 	// set up server info
 	ss := server.ServerInfo{
 		Repo:                 repo,
-		Sender:               sender,
 		SecretKey:            g.SecretKey,
 		AccessTokenLifeTime:  g.AccessTokenLifeTime,
 		RefreshTokenLifeTime: g.RefreshTokenLifeTime,
+		Worker:               worker,
 	}
 
 	// register server info
@@ -94,4 +103,12 @@ func (g GrpcOption) Run() error {
 
 	log.Printf("serving grpc host: %s, port %d \n", g.GrpcHost, g.GrpcPort)
 	return s.Serve(lis)
+}
+
+func startWorkerServer(s *asynq.Server, taskProcessor worker.TaskProcessor) {
+	mux := asynq.NewServeMux()
+	server.NewWorkerMuxServer(mux, taskProcessor)
+	if err := s.Start(mux); err != nil {
+		log.Fatalf("failed to start worker server, error: %v", err)
+	}
 }
