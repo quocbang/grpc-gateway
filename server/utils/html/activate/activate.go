@@ -39,7 +39,7 @@ func (ea emailActivate) GenerateHTML() (string, error) {
 					Button: hermes.Button{
 						Color: "#22BC66", // Optional action button color
 						Text:  "Confirm your account",
-						Link:  fmt.Sprintf("https://quocbangdev.com.vn/user/activate?id=%s?secret_code=%s", ea.id, ea.secretCode),
+						Link:  fmt.Sprintf("https://quocbangdev.com.vn/user/activate?id=%s&secret_code=%s", ea.id, ea.secretCode),
 					},
 				},
 			},

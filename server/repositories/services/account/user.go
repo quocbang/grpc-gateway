@@ -51,23 +51,56 @@ func (s service) CreateAccount(ctx context.Context, req repositories.CreateAccou
 func (s service) GetAccount(ctx context.Context, req repositories.GetAccountRequest) (repositories.GetAccountReply, error) {
 	account := models.Account{}
 	if err := s.pg.Where("username = ?", req.Username).Take(&account).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return repositories.GetAccountReply{}, repositoriesErr.ErrDataNotFound
+		}
 		return repositories.GetAccountReply{}, err
 	}
 	return repositories.GetAccountReply{Account: account}, nil
 }
 
 func (s service) CreateVerifyAccount(ctx context.Context, req repositories.CreateVerifyAccountRequest) error {
-	verifyAccount := models.AccountVerify{
+	verifyAccount := models.VerifyAccount{
 		Username:   req.Username,
 		SecretCode: req.SecretCode,
 	}
 	return s.pg.Create(&verifyAccount).Error
 }
 
-func (s service) GetVerifyAccount(ctx context.Context, req repositories.GetVerifyAccountRequest) (repositories.GetVerifyAccountReply, error) {
-	verifyAccount := models.AccountVerify{}
-	if err := s.pg.Where("username = ?", req.Username).Take(&verifyAccount).Error; err != nil {
-		return repositories.GetVerifyAccountReply{}, err
+func (s service) GetUnVerifyAccount(ctx context.Context, req repositories.GetUnVerifyAccountRequest) (repositories.GetUnVerifyAccountReply, error) {
+	verifyAccount := models.VerifyAccount{}
+	if err := s.pg.Where("username = ? and is_used = false", req.Username).Take(&verifyAccount).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return repositories.GetUnVerifyAccountReply{}, repositoriesErr.ErrDataNotFound
+		}
+		return repositories.GetUnVerifyAccountReply{}, err
 	}
-	return repositories.GetVerifyAccountReply{AccountVerify: verifyAccount}, nil
+	return repositories.GetUnVerifyAccountReply{VerifyAccount: verifyAccount}, nil
+}
+
+// UpdateUserRole is update user role
+// *Note: please ensure the user role is always to the higher role.
+func (s service) UpdateUserRole(ctx context.Context, req repositories.UpdateUserRoleRequest) (repositories.CommonUpdateReply, error) {
+	// TODO: fix to update multiple fields
+	updateConditions := models.Account{
+		Username:       req.Username,
+		IsUserVerified: true,
+		Role:           req.ToRole,
+	}.BuildUpdateFields()
+	reply := s.pg.Model(&models.Account{Username: req.Username, Role: req.ToRole}).Where("username = ?", req.Username).Updates(updateConditions)
+	return repositories.CommonUpdateReply{
+		AffectedRows: repositories.AffectedRows(reply.RowsAffected),
+	}, reply.Error
+}
+
+func (s service) UpdateVerifiedAccount(ctx context.Context, req repositories.UpdateVerifiedAccountRequest) (repositories.CommonUpdateReply, error) {
+	// TODO: fix to update multiple fields
+	updateConditions := models.VerifyAccount{
+		Username: req.Username,
+		IsUsed:   true,
+	}.BuildUpdateFields()
+	reply := s.pg.Model(&models.VerifyAccount{}).Where("username = ?", req.Username).Updates(updateConditions)
+	return repositories.CommonUpdateReply{
+		AffectedRows: repositories.AffectedRows(reply.RowsAffected),
+	}, reply.Error
 }

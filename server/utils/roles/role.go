@@ -30,6 +30,6 @@ func IsNeedToCheckMethodAccess(fullMethod string) bool {
 func init() {
 	// account services
 	{
-		accessRoles[accountService+"RenewAccess"] = []Roles{Roles_USER, Roles_ADMIN, Roles_LEADER}
+		// accessRoles[accountService+"RenewAccess"] = []Roles{Roles_USER, Roles_ADMIN, Roles_LEADER}
 	}
 }

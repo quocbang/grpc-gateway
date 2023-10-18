@@ -161,22 +161,22 @@ func (_c *Account_GetAccount_Call) RunAndReturn(run func(context.Context, reposi
 	return _c
 }
 
-// GetVerifyAccount provides a mock function with given fields: _a0, _a1
-func (_m *Account) GetVerifyAccount(_a0 context.Context, _a1 repositories.GetVerifyAccountRequest) (repositories.GetVerifyAccountReply, error) {
+// GetUnVerifyAccount provides a mock function with given fields: _a0, _a1
+func (_m *Account) GetUnVerifyAccount(_a0 context.Context, _a1 repositories.GetUnVerifyAccountRequest) (repositories.GetUnVerifyAccountReply, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 repositories.GetVerifyAccountReply
+	var r0 repositories.GetUnVerifyAccountReply
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, repositories.GetVerifyAccountRequest) (repositories.GetVerifyAccountReply, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.GetUnVerifyAccountRequest) (repositories.GetUnVerifyAccountReply, error)); ok {
 		return rf(_a0, _a1)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, repositories.GetVerifyAccountRequest) repositories.GetVerifyAccountReply); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.GetUnVerifyAccountRequest) repositories.GetUnVerifyAccountReply); ok {
 		r0 = rf(_a0, _a1)
 	} else {
-		r0 = ret.Get(0).(repositories.GetVerifyAccountReply)
+		r0 = ret.Get(0).(repositories.GetUnVerifyAccountReply)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, repositories.GetVerifyAccountRequest) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, repositories.GetUnVerifyAccountRequest) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -185,31 +185,31 @@ func (_m *Account) GetVerifyAccount(_a0 context.Context, _a1 repositories.GetVer
 	return r0, r1
 }
 
-// Account_GetVerifyAccount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetVerifyAccount'
-type Account_GetVerifyAccount_Call struct {
+// Account_GetUnVerifyAccount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUnVerifyAccount'
+type Account_GetUnVerifyAccount_Call struct {
 	*mock.Call
 }
 
-// GetVerifyAccount is a helper method to define mock.On call
+// GetUnVerifyAccount is a helper method to define mock.On call
 //   - _a0 context.Context
-//   - _a1 repositories.GetVerifyAccountRequest
-func (_e *Account_Expecter) GetVerifyAccount(_a0 interface{}, _a1 interface{}) *Account_GetVerifyAccount_Call {
-	return &Account_GetVerifyAccount_Call{Call: _e.mock.On("GetVerifyAccount", _a0, _a1)}
+//   - _a1 repositories.GetUnVerifyAccountRequest
+func (_e *Account_Expecter) GetUnVerifyAccount(_a0 interface{}, _a1 interface{}) *Account_GetUnVerifyAccount_Call {
+	return &Account_GetUnVerifyAccount_Call{Call: _e.mock.On("GetUnVerifyAccount", _a0, _a1)}
 }
 
-func (_c *Account_GetVerifyAccount_Call) Run(run func(_a0 context.Context, _a1 repositories.GetVerifyAccountRequest)) *Account_GetVerifyAccount_Call {
+func (_c *Account_GetUnVerifyAccount_Call) Run(run func(_a0 context.Context, _a1 repositories.GetUnVerifyAccountRequest)) *Account_GetUnVerifyAccount_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(repositories.GetVerifyAccountRequest))
+		run(args[0].(context.Context), args[1].(repositories.GetUnVerifyAccountRequest))
 	})
 	return _c
 }
 
-func (_c *Account_GetVerifyAccount_Call) Return(_a0 repositories.GetVerifyAccountReply, _a1 error) *Account_GetVerifyAccount_Call {
+func (_c *Account_GetUnVerifyAccount_Call) Return(_a0 repositories.GetUnVerifyAccountReply, _a1 error) *Account_GetUnVerifyAccount_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *Account_GetVerifyAccount_Call) RunAndReturn(run func(context.Context, repositories.GetVerifyAccountRequest) (repositories.GetVerifyAccountReply, error)) *Account_GetVerifyAccount_Call {
+func (_c *Account_GetUnVerifyAccount_Call) RunAndReturn(run func(context.Context, repositories.GetUnVerifyAccountRequest) (repositories.GetUnVerifyAccountReply, error)) *Account_GetUnVerifyAccount_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -263,6 +263,112 @@ func (_c *Account_Login_Call) Return(_a0 repositories.LoginReply, _a1 error) *Ac
 }
 
 func (_c *Account_Login_Call) RunAndReturn(run func(context.Context, repositories.LoginRequest) (repositories.LoginReply, error)) *Account_Login_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateUserRole provides a mock function with given fields: _a0, _a1
+func (_m *Account) UpdateUserRole(_a0 context.Context, _a1 repositories.UpdateUserRoleRequest) (repositories.CommonUpdateReply, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 repositories.CommonUpdateReply
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.UpdateUserRoleRequest) (repositories.CommonUpdateReply, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.UpdateUserRoleRequest) repositories.CommonUpdateReply); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(repositories.CommonUpdateReply)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, repositories.UpdateUserRoleRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Account_UpdateUserRole_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateUserRole'
+type Account_UpdateUserRole_Call struct {
+	*mock.Call
+}
+
+// UpdateUserRole is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 repositories.UpdateUserRoleRequest
+func (_e *Account_Expecter) UpdateUserRole(_a0 interface{}, _a1 interface{}) *Account_UpdateUserRole_Call {
+	return &Account_UpdateUserRole_Call{Call: _e.mock.On("UpdateUserRole", _a0, _a1)}
+}
+
+func (_c *Account_UpdateUserRole_Call) Run(run func(_a0 context.Context, _a1 repositories.UpdateUserRoleRequest)) *Account_UpdateUserRole_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(repositories.UpdateUserRoleRequest))
+	})
+	return _c
+}
+
+func (_c *Account_UpdateUserRole_Call) Return(_a0 repositories.CommonUpdateReply, _a1 error) *Account_UpdateUserRole_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Account_UpdateUserRole_Call) RunAndReturn(run func(context.Context, repositories.UpdateUserRoleRequest) (repositories.CommonUpdateReply, error)) *Account_UpdateUserRole_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateVerifiedAccount provides a mock function with given fields: _a0, _a1
+func (_m *Account) UpdateVerifiedAccount(_a0 context.Context, _a1 repositories.UpdateVerifiedAccountRequest) (repositories.CommonUpdateReply, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 repositories.CommonUpdateReply
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.UpdateVerifiedAccountRequest) (repositories.CommonUpdateReply, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.UpdateVerifiedAccountRequest) repositories.CommonUpdateReply); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(repositories.CommonUpdateReply)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, repositories.UpdateVerifiedAccountRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Account_UpdateVerifiedAccount_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateVerifiedAccount'
+type Account_UpdateVerifiedAccount_Call struct {
+	*mock.Call
+}
+
+// UpdateVerifiedAccount is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 repositories.UpdateVerifiedAccountRequest
+func (_e *Account_Expecter) UpdateVerifiedAccount(_a0 interface{}, _a1 interface{}) *Account_UpdateVerifiedAccount_Call {
+	return &Account_UpdateVerifiedAccount_Call{Call: _e.mock.On("UpdateVerifiedAccount", _a0, _a1)}
+}
+
+func (_c *Account_UpdateVerifiedAccount_Call) Run(run func(_a0 context.Context, _a1 repositories.UpdateVerifiedAccountRequest)) *Account_UpdateVerifiedAccount_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(repositories.UpdateVerifiedAccountRequest))
+	})
+	return _c
+}
+
+func (_c *Account_UpdateVerifiedAccount_Call) Return(_a0 repositories.CommonUpdateReply, _a1 error) *Account_UpdateVerifiedAccount_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Account_UpdateVerifiedAccount_Call) RunAndReturn(run func(context.Context, repositories.UpdateVerifiedAccountRequest) (repositories.CommonUpdateReply, error)) *Account_UpdateVerifiedAccount_Call {
 	_c.Call.Return(run)
 	return _c
 }

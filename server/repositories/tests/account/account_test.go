@@ -5,11 +5,12 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+
 	"github.com/quocbang/grpc-gateway/server/repositories"
+	"github.com/quocbang/grpc-gateway/server/repositories/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories/orm/models"
 	"github.com/quocbang/grpc-gateway/server/utils/hashing"
 	"github.com/quocbang/grpc-gateway/server/utils/roles"
-	"gorm.io/gorm"
 )
 
 func (s Suite) TestCreateAccount() {
@@ -125,7 +126,7 @@ func (s *Suite) TestGetAccount() {
 
 		// Assert
 		assertion.Error(err)
-		assertion.Equal(gorm.ErrRecordNotFound, err)
+		assertion.Equal(errors.ErrDataNotFound, err)
 	}
 }
 
@@ -160,20 +161,20 @@ func (s *Suite) TestCreateVerifyAccount() {
 
 		// Assert
 		assertion.NoError(err)
-		reply, err := s.Repo.Account().GetVerifyAccount(ctx, repositories.GetVerifyAccountRequest{
+		reply, err := s.Repo.Account().GetUnVerifyAccount(ctx, repositories.GetUnVerifyAccountRequest{
 			Username: testUsername,
 		})
 		assertion.NoError(err)
-		expected := repositories.GetVerifyAccountReply{
-			AccountVerify: models.AccountVerify{
+		expected := repositories.GetUnVerifyAccountReply{
+			VerifyAccount: models.VerifyAccount{
 				Username:   testUsername,
 				SecretCode: secretCode,
 			},
 		}
-		assertion.Equal(expected.AccountVerify.Username, reply.AccountVerify.Username)
-		assertion.Equal(expected.AccountVerify.SecretCode, reply.AccountVerify.SecretCode)
-		assertion.NotNil(reply.AccountVerify.CreatedAt)
-		assertion.NotNil(reply.AccountVerify.UpdatedAt)
+		assertion.Equal(expected.VerifyAccount.Username, reply.VerifyAccount.Username)
+		assertion.Equal(expected.VerifyAccount.SecretCode, reply.VerifyAccount.SecretCode)
+		assertion.NotNil(reply.VerifyAccount.CreatedAt)
+		assertion.NotNil(reply.VerifyAccount.UpdatedAt)
 	}
 
 	// bad case
@@ -190,7 +191,7 @@ func (s *Suite) TestCreateVerifyAccount() {
 
 		// Assert
 		assertion.Error(err)
-		assertion.Equal("ERROR: insert or update on table \"account_verify\" violates foreign key constraint \"fk_account_account_verify\" (SQLSTATE 23503)", err.Error())
+		assertion.Equal("ERROR: insert or update on table \"verify_account\" violates foreign key constraint \"fk_account_account_verify\" (SQLSTATE 23503)", err.Error())
 	}
 }
 
@@ -221,24 +222,71 @@ func (s *Suite) TestGetVerifyAccount() {
 		}
 		err = s.Repo.Account().CreateVerifyAccount(ctx, createVerifyAccountRequest)
 		assertion.NoError(err)
-		req := repositories.GetVerifyAccountRequest{
+		req := repositories.GetUnVerifyAccountRequest{
 			Username: testUsername,
 		}
 
 		// Act
-		reply, err := s.Repo.Account().GetVerifyAccount(ctx, req)
+		reply, err := s.Repo.Account().GetUnVerifyAccount(ctx, req)
 
 		// Assert
 		assertion.NoError(err)
-		expected := repositories.GetVerifyAccountReply{
-			AccountVerify: models.AccountVerify{
+		expected := repositories.GetUnVerifyAccountReply{
+			VerifyAccount: models.VerifyAccount{
 				Username:   testUsername,
 				SecretCode: secretCode,
 			},
 		}
-		assertion.Equal(expected.AccountVerify.Username, reply.AccountVerify.Username)
-		assertion.Equal(expected.AccountVerify.SecretCode, reply.AccountVerify.SecretCode)
-		assertion.NotNil(reply.AccountVerify.CreatedAt)
-		assertion.NotNil(reply.AccountVerify.UpdatedAt)
+		assertion.Equal(expected.VerifyAccount.Username, reply.VerifyAccount.Username)
+		assertion.Equal(expected.VerifyAccount.SecretCode, reply.VerifyAccount.SecretCode)
+		assertion.NotNil(reply.VerifyAccount.CreatedAt)
+		assertion.NotNil(reply.VerifyAccount.UpdatedAt)
+	}
+}
+
+func (s *Suite) TestUpdateUserRole() {
+	assertion := s.Assertions
+	testUser := "test_user"
+	testEmail := "test_email@gmail.com"
+	testHashPassword, err := hashing.HashPassword("test_password")
+	assertion.NoError(err)
+	ctx := context.Background()
+
+	// bad cases
+	{ // could not update to lower role
+		// Arrange
+		// create user with role is UNSPECIFIED_USER
+		assertion.NoError(s.ClearTable())
+		createAccountRequest := repositories.CreateAccountRequest{
+			Username:     testUser,
+			Email:        testEmail,
+			HashPassword: testHashPassword,
+		}
+		err := s.Repo.Account().CreateAccount(ctx, createAccountRequest)
+		assertion.NoError(err)
+
+		// update role to LEADER
+		updateToLeaderRequest := repositories.UpdateUserRoleRequest{
+			Username: testUser,
+			ToRole:   roles.Roles_LEADER,
+		}
+		_, err = s.Repo.Account().UpdateUserRole(ctx, updateToLeaderRequest)
+		assertion.NoError(err)
+
+		updateToUserRequest := repositories.UpdateUserRoleRequest{
+			Username: testUser,
+			ToRole:   roles.Roles_USER,
+		}
+
+		// Act
+		_, err = s.Repo.Account().UpdateUserRole(ctx, updateToUserRequest)
+
+		// Assert
+		assertion.Error(err)
+		expected := errors.Error{
+			Code:    errors.Code_COULD_NOT_DOWN_ROLE,
+			Details: "could not update to lower role",
+		}
+		assertion.Equal(expected, err)
 	}
 }

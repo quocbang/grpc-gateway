@@ -21,6 +21,9 @@ type Account interface {
 	Login(context.Context, LoginRequest) (LoginReply, error)
 	CreateAccount(context.Context, CreateAccountRequest) error
 	GetAccount(context.Context, GetAccountRequest) (GetAccountReply, error)
+	UpdateUserRole(context.Context, UpdateUserRoleRequest) (CommonUpdateReply, error)
+
 	CreateVerifyAccount(context.Context, CreateVerifyAccountRequest) error
-	GetVerifyAccount(context.Context, GetVerifyAccountRequest) (GetVerifyAccountReply, error)
+	GetUnVerifyAccount(context.Context, GetUnVerifyAccountRequest) (GetUnVerifyAccountReply, error)
+	UpdateVerifiedAccount(context.Context, UpdateVerifiedAccountRequest) (CommonUpdateReply, error)
 }

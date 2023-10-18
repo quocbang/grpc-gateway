@@ -41,11 +41,21 @@ type CreateVerifyAccountRequest struct {
 }
 
 // GetVerifyAccountRequest definition.
-type GetVerifyAccountRequest struct {
+type GetUnVerifyAccountRequest struct {
 	Username string
 }
 
 // GetVerifyAccountReply definition.
-type GetVerifyAccountReply struct {
-	models.AccountVerify
+type GetUnVerifyAccountReply struct {
+	models.VerifyAccount
+}
+
+// UpdateUserRoleRequest definition.
+type UpdateUserRoleRequest struct {
+	Username string
+	ToRole   roles.Roles
+}
+
+type UpdateVerifiedAccountRequest struct {
+	Username string
 }

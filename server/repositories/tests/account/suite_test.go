@@ -15,7 +15,7 @@ type Suite struct {
 
 func NewSuite() *Suite {
 	s := suites.NewSuite(suites.BasicSuite{
-		Models: []models.Model{&models.AccountVerify{}, &models.Account{}}, // the fk should clear first
+		Models: []models.Model{&models.VerifyAccount{}, &models.Account{}}, // the fk should clear first
 	})
 	return &Suite{
 		BasicSuite: *s,

@@ -12,6 +12,7 @@ type Model interface {
 func ListModels() []Model {
 	return []Model{
 		&Account{},
-		&AccountVerify{},
+		&VerifyAccount{},
+		&Sessions{},
 	}
 }

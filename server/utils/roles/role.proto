@@ -4,6 +4,7 @@ package roles;
 
 option go_package = "github.com/quocbang/grpc-gateway/utils/roles";
 
+// the role is always from lower to higher permission.
 enum Roles {
   UNSPECIFIED_USER = 0;
   USER = 1;

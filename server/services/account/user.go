@@ -2,6 +2,7 @@ package account
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/quocbang/grpc-gateway/pkg/grpc/interceptors"
 	"github.com/quocbang/grpc-gateway/pkg/pb"
 	"github.com/quocbang/grpc-gateway/server/repositories"
-	"github.com/quocbang/grpc-gateway/server/repositories/errors"
+	rpErr "github.com/quocbang/grpc-gateway/server/repositories/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories/utils/postgres"
 	"github.com/quocbang/grpc-gateway/server/utils/hashing"
 	"github.com/quocbang/grpc-gateway/server/utils/html/activate"
@@ -116,8 +117,8 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 		"Password": "required,min=8",
 	}
 	if err := validator.ValidateStructWithoutTag[pb.SignUpRequest](req, validateRules); err != nil {
-		return nil, errors.Error{
-			Code:    errors.Code_MISSING_REQUEST,
+		return nil, rpErr.Error{
+			Code:    rpErr.Code_MISSING_REQUEST,
 			Details: err.Error(),
 		}
 	}
@@ -125,12 +126,12 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 	// start transaction
 	tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		if e, ok := errors.As(err); ok {
-			if e.Code == errors.Code_ALREADY_IN_TRANSACTION {
+		if e, ok := rpErr.As(err); ok {
+			if e.Code == rpErr.Code_ALREADY_IN_TRANSACTION {
 				interceptors.GetLoggerFormContext(ctx).Warn("duplicated transaction")
 			}
 		}
-		return nil, errors.Error{
+		return nil, rpErr.Error{
 			Details: fmt.Sprintf("failed to start transaction, error: %v", err),
 		}
 	}
@@ -143,7 +144,7 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 	// create user
 	hashPassword, err := hashing.HashPassword(req.Password)
 	if err != nil {
-		return nil, errors.Error{
+		return nil, rpErr.Error{
 			Details: fmt.Sprintf("failed to hash password, error: %v \n", err),
 		}
 	}
@@ -153,7 +154,7 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 		HashPassword: hashPassword,
 	}); err != nil {
 		if postgres.ErrorIs(err, postgres.UniqueViolation) {
-			return nil, errors.ErrDataExisted
+			return nil, rpErr.ErrDataExisted
 		}
 		return nil, err
 	}
@@ -177,7 +178,7 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 	}
 	accessToken, err := jwt.GenerateToken()
 	if err != nil {
-		return nil, errors.Error{
+		return nil, rpErr.Error{
 			Details: err.Error(),
 		}
 	}
@@ -186,7 +187,7 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 	jwt.TokenLifeTime = s.refreshTokenLifeTime
 	refreshToken, err := jwt.GenerateToken()
 	if err != nil {
-		return nil, errors.Error{
+		return nil, rpErr.Error{
 			Details: err.Error(),
 		}
 	}
@@ -197,12 +198,12 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 	}
 
 	// get verify account
-	verifyAccountInfo, err := tx.Account().GetVerifyAccount(ctx, repositories.GetVerifyAccountRequest{
+	unVerifyAccountInfo, err := tx.Account().GetUnVerifyAccount(ctx, repositories.GetUnVerifyAccountRequest{
 		Username: req.Username,
 	})
 
 	// send verify mail
-	htmlActivateService := activate.NewHTMLActivateService(req.Username, verifyAccountInfo.SecretCode)
+	htmlActivateService := activate.NewHTMLActivateService(req.Username, unVerifyAccountInfo.SecretCode)
 	content, err := htmlActivateService.GenerateHTML()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate activate html, error: %v", err)
@@ -224,12 +225,99 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 	// all ok
 	err = tx.Commit()
 	if err != nil {
-		return nil, errors.Error{
+		return nil, rpErr.Error{
 			Details: fmt.Sprintf("failed to commit, error: %v", err),
 		}
 	}
 
 	return &pb.SignUpResponse{
+		SessionId:             uuid.NewString(),
+		AccessToken:           accessToken,
+		AccessTokenExpiredAt:  timestamppb.Now(),
+		RefreshToken:          refreshToken,
+		RefreshTokenExpiredAt: timestamppb.Now(),
+	}, nil
+}
+
+func (s *server) VerifyAccount(ctx context.Context, req *pb.VerifyAccountRequest) (*pb.VerifyAccountResponse, error) {
+	// check input data
+	validateRules := map[string]string{
+		"Id":         "required",
+		"SecretCode": "required",
+	}
+	if err := validator.ValidateStructWithoutTag[pb.VerifyAccountRequest](req, validateRules); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	unVerifyAccountInfo, err := s.repo.Account().GetUnVerifyAccount(ctx, repositories.GetUnVerifyAccountRequest{
+		Username: req.GetId(),
+	})
+	if err != nil {
+		if errors.Is(err, rpErr.ErrDataNotFound) {
+			return nil, status.Error(codes.Internal, "id not found or the id was verified")
+		}
+		return nil, err
+	}
+
+	// compare secret code
+	if unVerifyAccountInfo.SecretCode != req.GetSecretCode() {
+		return nil, status.Error(codes.InvalidArgument, "wrong secret code")
+	}
+
+	// // check the user role to ensure the role is always higher old role
+	// userInfo, err := s.repo.Account().GetAccount(ctx, repositories.GetAccountRequest{
+	// 	Username: req.Id,
+	// })
+	// if err != nil {
+	// 	if errors.Is(err, rpErr.ErrDataNotFound) {
+	// 		return nil, status.Error(codes.Internal, "the user id not found")
+	// 	}
+	// 	return nil, status.Error(codes.Internal, err.Error())
+	// }
+	// if userInfo.Role >= roles.Roles_USER {
+	// 	return nil, status.Error(codes.Internal, "can not update to lower role")
+	// }
+
+	// update user roles
+	_, err = s.repo.Account().UpdateUserRole(ctx, repositories.UpdateUserRoleRequest{
+		Username: req.Id,
+		ToRole:   roles.Roles_USER,
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// update to verified
+	_, err = s.repo.Account().UpdateVerifiedAccount(ctx, repositories.UpdateVerifiedAccountRequest{
+		Username: req.GetId(),
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// generate new token key
+	jwt := token.JWT{
+		SecretKey: s.secretKey,
+		User: token.UserInfo{
+			Username: req.GetId(),
+			Role:     roles.Roles_USER, // if UpdateUserRole replies with nil err it is certain that the role is the user.
+		},
+		TokenLifeTime: s.accessTokenLifeTime,
+	}
+	accessToken, err := jwt.GenerateToken()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate refresh token, error: %v", err)
+	}
+
+	jwt.TokenLifeTime = s.refreshTokenLifeTime
+	refreshToken, err := jwt.GenerateToken()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate refresh token, error: %v", err)
+	}
+
+	// TODO: set lock old refresh token in session table
+
+	return &pb.VerifyAccountResponse{
 		SessionId:             uuid.NewString(),
 		AccessToken:           accessToken,
 		AccessTokenExpiredAt:  timestamppb.Now(),

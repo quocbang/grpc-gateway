@@ -20,7 +20,7 @@ message LoginResponse {
 }
 
 message RenewAccessRequest {
-  string session_id = 1;
+  string refresh_token = 1;
 }
 
 message RenewAccessResponse {
@@ -35,6 +35,19 @@ message SignUpRequest {
 }
 
 message SignUpResponse {
+  string session_id = 1;
+  string access_token = 2;
+  google.protobuf.Timestamp access_token_expired_at  = 3;
+  string refresh_token = 4;
+  google.protobuf.Timestamp refresh_token_expired_at  = 5;
+}
+
+message VerifyAccountRequest {
+  string id = 1;
+  string secret_code = 2;
+}
+
+message VerifyAccountResponse {
   string session_id = 1;
   string access_token = 2;
   google.protobuf.Timestamp access_token_expired_at  = 3;
