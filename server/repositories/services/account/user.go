@@ -104,3 +104,27 @@ func (s service) UpdateVerifiedAccount(ctx context.Context, req repositories.Upd
 		AffectedRows: repositories.AffectedRows(reply.RowsAffected),
 	}, reply.Error
 }
+
+func (s service) CreateSessions(ctx context.Context, req repositories.CreateSessionsRequest) error {
+	sessions := models.Sessions{
+		ID:           req.SSID,
+		Username:     req.Username,
+		RefreshToken: req.RefreshToken,
+		ExpiresAt:    req.ExpiresAt.Nanoseconds(),
+		ClientIP:     req.ClientIP,
+		UserAgent:    req.UserAgent,
+		IsBLocked:    req.IsBLocked,
+	}
+	return s.pg.Create(&sessions).Error
+}
+
+func (s service) GetSessions(ctx context.Context, req repositories.GetSessionsRequest) (repositories.GetSessionsReply, error) {
+	sessions := models.Sessions{}
+	if err := s.pg.Where("id = ?", req.SessionID).Take(&sessions).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return repositories.GetSessionsReply{}, repositoriesErr.ErrDataNotFound
+		}
+		return repositories.GetSessionsReply{}, err
+	}
+	return repositories.GetSessionsReply{Sessions: sessions}, nil
+}

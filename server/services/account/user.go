@@ -82,31 +82,89 @@ func (s *server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResp
 		},
 		TokenLifeTime: s.accessTokenLifeTime,
 	}
-	accessToken, err := jwt.GenerateToken()
+	accessToken, accessTokenPayload, err := jwt.GenerateToken()
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	// generate refresh token
 	jwt.TokenLifeTime = s.refreshTokenLifeTime
-	refreshToken, err := jwt.GenerateToken()
+	refreshToken, refreshTokenPayload, err := jwt.GenerateToken()
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// create sessions
+	if err := s.createSessions(ctx, refreshToken, refreshTokenPayload); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &pb.LoginResponse{
-		SessionId:             uuid.NewString(),
+		SessionId:             accessTokenPayload.SessionID.String(),
 		AccessToken:           accessToken,
-		AccessTokenExpiredAt:  timestamppb.Now(),
+		AccessTokenExpiredAt:  timestamppb.New(accessTokenPayload.ExpiresAt.Time),
 		RefreshToken:          refreshToken,
-		RefreshTokenExpiredAt: timestamppb.Now(),
+		RefreshTokenExpiredAt: timestamppb.New(refreshTokenPayload.ExpiresAt.Time),
 	}, nil
 }
 
 func (s *server) RenewAccess(ctx context.Context, req *pb.RenewAccessRequest) (*pb.RenewAccessResponse, error) {
-	claims := interceptors.GetJWTClaimsFromContext(ctx)
-	fmt.Println(claims)
-	return &pb.RenewAccessResponse{}, nil
+	validateRule := map[string]string{
+		"RefreshToken": "required",
+	}
+	if err := validator.ValidateStructWithoutTag[pb.RenewAccessRequest](req, validateRule); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	jwt := token.JWT{
+		SecretKey: s.secretKey,
+	}
+	refreshTokenPayload, err := jwt.VerifyToken(req.GetRefreshToken())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	sessions, err := s.repo.Account().GetSessions(ctx, repositories.GetSessionsRequest{
+		SessionID: refreshTokenPayload.SessionID,
+	})
+	if err != nil {
+		if errors.Is(err, rpErr.ErrDataNotFound) {
+			return nil, status.Error(codes.Internal, "invalid session or session not found")
+		}
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if sessions.IsBLocked {
+		return nil, status.Error(codes.Unauthenticated, "blocked session")
+	}
+
+	if sessions.RefreshToken != req.GetRefreshToken() {
+		return nil, status.Error(codes.Unauthenticated, "mismatched session token")
+	}
+
+	if sessions.Username != refreshTokenPayload.Username {
+		return nil, status.Error(codes.Unauthenticated, "incorrect session user")
+	}
+
+	if time.Now().After(time.Unix(sessions.ExpiresAt, 0)) {
+		return nil, status.Error(codes.Unauthenticated, "session expired")
+	}
+
+	// renew access token
+	jwt.TokenLifeTime = s.accessTokenLifeTime
+	jwt.User = token.UserInfo{
+		Username: refreshTokenPayload.Username,
+		Role:     refreshTokenPayload.Role,
+	}
+	accessToken, accessTokenPayload, err := jwt.GenerateToken()
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &pb.RenewAccessResponse{
+		AccessToken:          accessToken,
+		AccessTokenExpiredAt: timestamppb.New(accessTokenPayload.ExpiresAt.Time),
+	}, nil
 }
 
 func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.SignUpResponse, err error) {
@@ -176,7 +234,7 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 		},
 		TokenLifeTime: s.accessTokenLifeTime,
 	}
-	accessToken, err := jwt.GenerateToken()
+	accessToken, accessTokenPayload, err := jwt.GenerateToken()
 	if err != nil {
 		return nil, rpErr.Error{
 			Details: err.Error(),
@@ -185,11 +243,16 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 
 	// generate JWT for refresh token.
 	jwt.TokenLifeTime = s.refreshTokenLifeTime
-	refreshToken, err := jwt.GenerateToken()
+	refreshToken, refreshTokenPayload, err := jwt.GenerateToken()
 	if err != nil {
 		return nil, rpErr.Error{
 			Details: err.Error(),
 		}
+	}
+
+	// create sessions
+	if err := s.createSessions(ctx, refreshToken, refreshTokenPayload); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	// create verify account
@@ -231,11 +294,11 @@ func (s *server) SignUp(ctx context.Context, req *pb.SignUpRequest) (resp *pb.Si
 	}
 
 	return &pb.SignUpResponse{
-		SessionId:             uuid.NewString(),
+		SessionId:             accessTokenPayload.SessionID.String(),
 		AccessToken:           accessToken,
-		AccessTokenExpiredAt:  timestamppb.Now(),
+		AccessTokenExpiredAt:  timestamppb.New(accessTokenPayload.ExpiresAt.Time),
 		RefreshToken:          refreshToken,
-		RefreshTokenExpiredAt: timestamppb.Now(),
+		RefreshTokenExpiredAt: timestamppb.New(refreshTokenPayload.ExpiresAt.Time),
 	}, nil
 }
 
@@ -290,24 +353,52 @@ func (s *server) VerifyAccount(ctx context.Context, req *pb.VerifyAccountRequest
 		},
 		TokenLifeTime: s.accessTokenLifeTime,
 	}
-	accessToken, err := jwt.GenerateToken()
+	accessToken, accessTokenPayload, err := jwt.GenerateToken()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate refresh token, error: %v", err)
 	}
 
 	jwt.TokenLifeTime = s.refreshTokenLifeTime
-	refreshToken, err := jwt.GenerateToken()
+	refreshToken, refreshTokenPayload, err := jwt.GenerateToken()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to generate refresh token, error: %v", err)
 	}
 
-	// TODO: set lock old refresh token in session table
+	// create sessions
+	if err := s.createSessions(ctx, refreshToken, refreshTokenPayload); err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	return &pb.VerifyAccountResponse{
-		SessionId:             uuid.NewString(),
+		SessionId:             accessTokenPayload.SessionID.String(),
 		AccessToken:           accessToken,
-		AccessTokenExpiredAt:  timestamppb.Now(),
+		AccessTokenExpiredAt:  timestamppb.New(accessTokenPayload.ExpiresAt.Time),
 		RefreshToken:          refreshToken,
-		RefreshTokenExpiredAt: timestamppb.Now(),
+		RefreshTokenExpiredAt: timestamppb.New(refreshTokenPayload.ExpiresAt.Time),
 	}, nil
+}
+
+func (s *server) createSessions(ctx context.Context, refreshToken string, refreshTokenPayload *token.JWTClaimCustom) error {
+	clientIP, err := interceptors.GetClientIPFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get client IP, error: %v", err)
+	}
+	userAgent, err := interceptors.GetUserAgentFromContext(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get user agent, error: %v", err)
+	}
+
+	err = s.repo.Account().CreateSessions(ctx, repositories.CreateSessionsRequest{
+		SSID:         refreshTokenPayload.SessionID,
+		Username:     refreshTokenPayload.Username,
+		RefreshToken: refreshToken,
+		ExpiresAt:    time.Duration(refreshTokenPayload.ExpiresAt.Unix()),
+		ClientIP:     clientIP,
+		UserAgent:    userAgent,
+		IsBLocked:    false,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

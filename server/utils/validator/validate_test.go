@@ -45,7 +45,7 @@ func TestValidateStructWithoutTag(t *testing.T) {
 
 		// Assert
 		assertion.Error(err)
-		expected := fmt.Errorf("Key: 'Test.Name' Error:Field validation for 'Name' failed on the 'required' tag")
+		expected := fmt.Errorf("missing field [Name]")
 		assertion.Equal(expected.Error(), err.Error())
 	}
 	{ // missing Age field
@@ -59,7 +59,7 @@ func TestValidateStructWithoutTag(t *testing.T) {
 
 		// Assert
 		assertion.Error(err)
-		expected := fmt.Errorf("Key: 'Test.Age' Error:Field validation for 'Age' failed on the 'required' tag")
+		expected := fmt.Errorf("missing field [Age]")
 		assertion.Equal(expected.Error(), err.Error())
 	}
 	{
@@ -74,7 +74,7 @@ func TestValidateStructWithoutTag(t *testing.T) {
 
 		// Assert
 		assertion.Error(err)
-		expected := fmt.Errorf("Key: 'Test.Age' Error:Field validation for 'Age' failed on the 'min' tag")
+		expected := fmt.Errorf("field [Age] should be greater than or equal to 18 but actual got 12")
 		assertion.Equal(expected.Error(), err.Error())
 	}
 }

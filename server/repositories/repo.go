@@ -26,4 +26,7 @@ type Account interface {
 	CreateVerifyAccount(context.Context, CreateVerifyAccountRequest) error
 	GetUnVerifyAccount(context.Context, GetUnVerifyAccountRequest) (GetUnVerifyAccountReply, error)
 	UpdateVerifiedAccount(context.Context, UpdateVerifiedAccountRequest) (CommonUpdateReply, error)
+
+	CreateSessions(context.Context, CreateSessionsRequest) error
+	GetSessions(context.Context, GetSessionsRequest) (GetSessionsReply, error)
 }

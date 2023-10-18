@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
+
 	"github.com/quocbang/grpc-gateway/server/utils/roles"
 )
 
@@ -14,8 +16,9 @@ type TokenMaker interface {
 }
 
 type JWTClaimCustom struct {
-	ID   string
-	Role roles.Roles
+	SessionID uuid.UUID
+	Username  string
+	Role      roles.Roles
 	jwt.RegisteredClaims
 }
 
@@ -30,14 +33,15 @@ type JWT struct {
 	TokenLifeTime time.Duration
 }
 
-func (j JWT) GenerateToken() (string, error) {
+func (j JWT) GenerateToken() (string, *JWTClaimCustom, error) {
 	if j.SecretKey == "" {
-		return "", fmt.Errorf("missing secret key")
+		return "", nil, fmt.Errorf("missing secret key")
 	}
 
 	claims := &JWTClaimCustom{
-		ID:   j.User.Username,
-		Role: j.User.Role,
+		SessionID: uuid.New(),
+		Username:  j.User.Username,
+		Role:      j.User.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: &jwt.NumericDate{
 				Time: time.Now().Add(j.TokenLifeTime),
@@ -48,10 +52,10 @@ func (j JWT) GenerateToken() (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(j.SecretKey))
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
-	return signedToken, nil
+	return signedToken, claims, nil
 }
 
 func (j JWT) VerifyToken(token string) (*JWTClaimCustom, error) {

@@ -1,6 +1,9 @@
 package repositories
 
 import (
+	"time"
+
+	"github.com/google/uuid"
 	"github.com/quocbang/grpc-gateway/server/repositories/orm/models"
 	"github.com/quocbang/grpc-gateway/server/utils/roles"
 )
@@ -58,4 +61,22 @@ type UpdateUserRoleRequest struct {
 
 type UpdateVerifiedAccountRequest struct {
 	Username string
+}
+
+type CreateSessionsRequest struct {
+	SSID         uuid.UUID
+	Username     string
+	RefreshToken string
+	ExpiresAt    time.Duration
+	ClientIP     string
+	UserAgent    string
+	IsBLocked    bool
+}
+
+type GetSessionsRequest struct {
+	SessionID uuid.UUID
+}
+
+type GetSessionsReply struct {
+	models.Sessions
 }

@@ -65,6 +65,49 @@ func (_c *Account_CreateAccount_Call) RunAndReturn(run func(context.Context, rep
 	return _c
 }
 
+// CreateSessions provides a mock function with given fields: _a0, _a1
+func (_m *Account) CreateSessions(_a0 context.Context, _a1 repositories.CreateSessionsRequest) error {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.CreateSessionsRequest) error); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Account_CreateSessions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateSessions'
+type Account_CreateSessions_Call struct {
+	*mock.Call
+}
+
+// CreateSessions is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 repositories.CreateSessionsRequest
+func (_e *Account_Expecter) CreateSessions(_a0 interface{}, _a1 interface{}) *Account_CreateSessions_Call {
+	return &Account_CreateSessions_Call{Call: _e.mock.On("CreateSessions", _a0, _a1)}
+}
+
+func (_c *Account_CreateSessions_Call) Run(run func(_a0 context.Context, _a1 repositories.CreateSessionsRequest)) *Account_CreateSessions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(repositories.CreateSessionsRequest))
+	})
+	return _c
+}
+
+func (_c *Account_CreateSessions_Call) Return(_a0 error) *Account_CreateSessions_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *Account_CreateSessions_Call) RunAndReturn(run func(context.Context, repositories.CreateSessionsRequest) error) *Account_CreateSessions_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateVerifyAccount provides a mock function with given fields: _a0, _a1
 func (_m *Account) CreateVerifyAccount(_a0 context.Context, _a1 repositories.CreateVerifyAccountRequest) error {
 	ret := _m.Called(_a0, _a1)
@@ -157,6 +200,59 @@ func (_c *Account_GetAccount_Call) Return(_a0 repositories.GetAccountReply, _a1 
 }
 
 func (_c *Account_GetAccount_Call) RunAndReturn(run func(context.Context, repositories.GetAccountRequest) (repositories.GetAccountReply, error)) *Account_GetAccount_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetSessions provides a mock function with given fields: _a0, _a1
+func (_m *Account) GetSessions(_a0 context.Context, _a1 repositories.GetSessionsRequest) (repositories.GetSessionsReply, error) {
+	ret := _m.Called(_a0, _a1)
+
+	var r0 repositories.GetSessionsReply
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.GetSessionsRequest) (repositories.GetSessionsReply, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, repositories.GetSessionsRequest) repositories.GetSessionsReply); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Get(0).(repositories.GetSessionsReply)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, repositories.GetSessionsRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Account_GetSessions_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetSessions'
+type Account_GetSessions_Call struct {
+	*mock.Call
+}
+
+// GetSessions is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 repositories.GetSessionsRequest
+func (_e *Account_Expecter) GetSessions(_a0 interface{}, _a1 interface{}) *Account_GetSessions_Call {
+	return &Account_GetSessions_Call{Call: _e.mock.On("GetSessions", _a0, _a1)}
+}
+
+func (_c *Account_GetSessions_Call) Run(run func(_a0 context.Context, _a1 repositories.GetSessionsRequest)) *Account_GetSessions_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(repositories.GetSessionsRequest))
+	})
+	return _c
+}
+
+func (_c *Account_GetSessions_Call) Return(_a0 repositories.GetSessionsReply, _a1 error) *Account_GetSessions_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Account_GetSessions_Call) RunAndReturn(run func(context.Context, repositories.GetSessionsRequest) (repositories.GetSessionsReply, error)) *Account_GetSessions_Call {
 	_c.Call.Return(run)
 	return _c
 }

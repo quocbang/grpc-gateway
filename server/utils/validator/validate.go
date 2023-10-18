@@ -47,7 +47,53 @@ func ValidateStructWithoutTag[T any](data any, rules map[string]string) error {
 	// validate struct
 	err := validate.Struct(data)
 	if err != nil {
-		return err
+		validationErrors := err.(validator.ValidationErrors)
+		var errorsMessage error
+		for _, validationError := range validationErrors {
+			if errorsMessage != nil {
+				errorsMessage = fmt.Errorf("%v, %v", errorsMessage, customError(validationError)) // append multiple error.
+			} else {
+				errorsMessage = fmt.Errorf("%v", customError(validationError))
+			}
+		}
+		return errorsMessage
+
 	}
 	return nil
+}
+
+func customError(validationError validator.FieldError) error {
+	fieldName := validationError.Field()
+	errTag := validationError.Tag()
+	params := validationError.Param()
+	value := validationError.Value()
+
+	switch errTag {
+	case "required":
+		return fmt.Errorf("missing field [%v]", fieldName)
+	case "min", "gte":
+		if validationError.Kind() == reflect.String {
+			return fmt.Errorf("length of field [%s] should be greater than or equal to %s but actual got %d", fieldName, params, len(value.(string)))
+		} else {
+			return fmt.Errorf("field [%s] should be greater than or equal to %s but actual got %v", fieldName, params, value)
+		}
+	case "max", "lte":
+		if validationError.Kind() == reflect.String {
+			return fmt.Errorf("length of field [%s] should be less than or equal to %s but actual got %v", fieldName, params, len(value.(string)))
+		} else {
+			return fmt.Errorf("field [%s] should be less than or equal to %s but actual got %v", fieldName, params, value)
+		}
+	case "eq":
+		return fmt.Errorf("field [%s] should be equal %s but actual got %v", fieldName, params, value)
+	case "ne":
+		return fmt.Errorf("field [%s] should not be equal %s", fieldName, params)
+	case "gt":
+		return fmt.Errorf("field [%s] should be greater than %s but actual got %v", fieldName, params, value)
+	case "lt":
+		return fmt.Errorf("field [%s] should be less than %s but actual got %v", fieldName, params, value)
+	case "email":
+		return fmt.Errorf("field [%s] should be a valid email address example: abc@gmail.com but actual got %v", fieldName, value)
+	default:
+		return validationError.(error) // return default error.
+	}
 }
