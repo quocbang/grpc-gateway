@@ -264,20 +264,6 @@ func (s *server) VerifyAccount(ctx context.Context, req *pb.VerifyAccountRequest
 		return nil, status.Error(codes.InvalidArgument, "wrong secret code")
 	}
 
-	// // check the user role to ensure the role is always higher old role
-	// userInfo, err := s.repo.Account().GetAccount(ctx, repositories.GetAccountRequest{
-	// 	Username: req.Id,
-	// })
-	// if err != nil {
-	// 	if errors.Is(err, rpErr.ErrDataNotFound) {
-	// 		return nil, status.Error(codes.Internal, "the user id not found")
-	// 	}
-	// 	return nil, status.Error(codes.Internal, err.Error())
-	// }
-	// if userInfo.Role >= roles.Roles_USER {
-	// 	return nil, status.Error(codes.Internal, "can not update to lower role")
-	// }
-
 	// update user roles
 	_, err = s.repo.Account().UpdateUserRole(ctx, repositories.UpdateUserRoleRequest{
 		Username: req.Id,
