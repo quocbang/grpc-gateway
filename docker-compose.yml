@@ -1,0 +1,32 @@
+version: '3'
+
+name: "grpc-gateway"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    ports:
+      - 54321:5432
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "root" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    restart: always
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "quocbang"
+      POSTGRES_PASSWORD: "quocbang"
+      POSTGRES_SCHEMA: "quocbang"
+      POSTGRES_HOST_AUTH_METHOD: trust
+  redis:
+    container_name: grpc-redis
+    image: redis:latest
+    restart: always
+    ports: 
+      - 63795:6379          
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - ./cachedata/:/data
+    command: redis-server /usr/local/etc/redis/redis.conf

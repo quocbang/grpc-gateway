@@ -44,6 +44,7 @@ message CreateProductRequest {
   repeated Product products = 1;
 }
 
-message CreateProductResponse {
-  CommonCreateResponse affected_rows = 1; 
+message ClientStreamRequest {
+  string ID = 1;
+  string color = 2;
 }

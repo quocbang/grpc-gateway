@@ -1,7 +1,7 @@
 package roles
 
 const (
-	accountService string = "/pb.AccountService/"
+// accountService string = "/pb.AccountService/"
 )
 
 var accessRoles = map[string][]Roles{}

@@ -2,12 +2,9 @@ package email
 
 import (
 	"context"
-	"log"
 
 	"github.com/jordan-wright/email"
-	"go.uber.org/zap"
 
-	"github.com/quocbang/grpc-gateway/pkg/grpc/interceptors"
 	"github.com/quocbang/grpc-gateway/server/sender"
 )
 
@@ -46,12 +43,12 @@ func (es emailService) SendVerifyEmail(ctx context.Context, to string, subject s
 }
 
 // TODO: resolve later because it's another process and not work for log.
-func printErr(ctx context.Context, errs <-chan error) {
-	for err := range errs {
-		if err != nil {
-			interceptors.GetLoggerFormContext(ctx).Error("Error during send email", zap.Error(err))
-			return
-		}
-	}
-	log.Println("send email successfully")
-}
+// func printErr(ctx context.Context, errs <-chan error) {
+// 	for err := range errs {
+// 		if err != nil {
+// 			interceptors.GetLoggerFormContext(ctx).Error("Error during send email", zap.Error(err))
+// 			return
+// 		}
+// 	}
+// 	log.Println("send email successfully")
+// }

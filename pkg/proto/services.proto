@@ -9,6 +9,7 @@ import "user.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 import "product.proto";
+import "common.proto";
 
 service AccountService {
   rpc SignUp (SignUpRequest) returns (SignUpResponse){
@@ -37,7 +38,7 @@ service AccountService {
 }
 
 service ProductService {
-  rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse) {
+  rpc CreateProduct(CreateProductRequest) returns (CommonCreateResponse) {
     option (google.api.http) = {
       post: "/api/product/phone"
       body: "*"
@@ -49,4 +50,8 @@ service ProductService {
       // body: "*"
     };
   };
+
+  rpc ClientStream(stream ClientStreamRequest) returns (CommonCreateResponse){};
+
+  rpc CreateProductsStream(stream CreateProductRequest) returns (CommonCreateResponse){};
 }

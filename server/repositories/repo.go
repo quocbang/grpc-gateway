@@ -3,10 +3,13 @@ package repositories
 import (
 	"context"
 	"database/sql"
+
+	"github.com/quocbang/grpc-gateway/server/repositories/orm/models"
 )
 
 type Repositories interface {
 	Account() Account
+	Product() Product
 	Transactions
 }
 
@@ -29,4 +32,9 @@ type Account interface {
 
 	CreateSessions(context.Context, CreateSessionsRequest) error
 	GetSessions(context.Context, GetSessionsRequest) (GetSessionsReply, error)
+}
+
+type Product interface {
+	Create(context.Context, models.Product) error
+	Creates(context.Context, []models.Product) error
 }

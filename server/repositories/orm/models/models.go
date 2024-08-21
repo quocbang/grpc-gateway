@@ -14,5 +14,6 @@ func ListModels() []Model {
 		&Account{},
 		&VerifyAccount{},
 		&Sessions{},
+		&Product{},
 	}
 }

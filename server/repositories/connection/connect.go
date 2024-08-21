@@ -5,6 +5,7 @@ import (
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 
 	"github.com/quocbang/grpc-gateway/server/repositories"
 	"github.com/quocbang/grpc-gateway/server/repositories/connection/logging"
@@ -58,15 +59,18 @@ func parseOptions(opts ...Options) *option {
 }
 
 func NewPostgresConnection(cfs PostgresConfig, scheme string) (*gorm.DB, error) {
-	connectString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d search_path=%s",
+	connectString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d",
 		cfs.Address,
 		cfs.Username,
 		cfs.Password,
 		cfs.Name,
 		cfs.Port,
-		scheme,
 	)
 	db, err := gorm.Open(postgres.Open(connectString), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix:   scheme,
+			SingularTable: false,
+		},
 		Logger: logging.NewGormLogger(),
 	})
 	if err != nil {

@@ -8,10 +8,15 @@ import (
 	"github.com/quocbang/grpc-gateway/server/repositories"
 	"github.com/quocbang/grpc-gateway/server/repositories/errors"
 	"github.com/quocbang/grpc-gateway/server/repositories/services/account"
+	"github.com/quocbang/grpc-gateway/server/repositories/services/product"
 )
 
 func (db DB) Account() repositories.Account {
 	return account.NewAccount(db.Postgres)
+}
+
+func (db DB) Product() repositories.Product {
+	return product.NewProduct(db.Postgres)
 }
 
 func (db DB) BeginTx(ctx context.Context, sqlOpts ...*sql.TxOptions) (repositories.Repositories, error) {
